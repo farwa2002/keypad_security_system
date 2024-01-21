@@ -1,0 +1,65 @@
+#include <Keypad.h>
+
+const int ROW_NUM    = 4; // Four rows
+const int COLUMN_NUM = 3; // Three columns
+
+char keys[ROW_NUM][COLUMN_NUM] = {
+  {'1','2','3'},
+  {'4','5','6'},
+  {'7','8','9'},
+  {'*','0','#'}
+};
+
+byte pin_rows[ROW_NUM] = {9, 8, 7, 6}; 
+byte pin_column[COLUMN_NUM] = {5, 4, 3}; 
+
+Keypad keypad = Keypad(makeKeymap(keys), pin_rows, pin_column, ROW_NUM, COLUMN_NUM);
+
+const int LED_PIN = 13; // Pin for the LED
+const int BUZZER_PIN = 10; // Pin for the buzzer
+
+bool isLocked = true;
+char enteredCode[5]; // Array to store entered code
+int codeIndex = 0; // Index for the entered code
+
+void setup() {
+  pinMode(LED_PIN, OUTPUT); 
+  pinMode(BUZZER_PIN, OUTPUT); // Set buzzer pin as output
+  Serial.begin(9600); 
+}
+
+void loop() {
+  char key = keypad.getKey();
+  
+  if (key && codeIndex < 4) { // Limit code input to 4 characters
+    enteredCode[codeIndex++] = key; // Add key to entered code
+    Serial.print(""); // Print '' to indicate keypress
+    
+    if (codeIndex == 4) { // Check the code when 4 digits are entered
+      if (checkCode("4646", enteredCode)) {
+        unlock();
+      } else {
+        activateBuzzer();
+        Serial.println("\nIncorrect password.");
+      }
+      codeIndex = 0; // Reset codeIndex for the next attempt
+    }
+  }
+}
+
+bool checkCode(const char* code, const char* entered) {
+  return strcmp(code, entered) == 0;
+}
+
+void unlock() {
+  digitalWrite(LED_PIN, HIGH); 
+  Serial.println("\nCorrect password Entered:"); 
+  delay(2000);
+  digitalWrite(LED_PIN, LOW);
+}
+
+void activateBuzzer() {
+  digitalWrite(BUZZER_PIN, HIGH); // Turn on the buzzer
+  delay(2000); // Keep the buzzer on for 2 seconds
+  digitalWrite(BUZZER_PIN, LOW); 
+}
